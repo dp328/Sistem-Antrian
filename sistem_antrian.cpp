@@ -3,6 +3,12 @@
 #include <algorithm>
 using namespace std;
 
+// ===== FUNCTION PROTOTYPE =====
+void tampilkanSemua();
+void cariPesanan();
+void sortirPesanan();
+
+
 struct Pesanan {
     int id;
     string nama;
@@ -114,6 +120,16 @@ void tampilkanSemua() {
              << " | Status: " << p.status << endl;
         cout << "---------------------------\n";
     }
+
+
+// ===== KONFIRMASI SORTIR =====
+    char konfirmasi;
+    cout << "\nIngin melihat hasil sortir berdasarkan jenis pesanan (y/n)? ";
+    cin >> konfirmasi;
+
+    if (konfirmasi == 'y' || konfirmasi == 'Y') {
+        sortirPesanan();
+    }
 }
 
 // ================= SEARCH =================
@@ -151,7 +167,6 @@ void batalkanPesanan() {
 }
 
 // ================= SORT =================
-// ================= SORT & TAMPILKAN BERDASARKAN JENIS =================
 void sortirPesanan() {
     if (antrian.empty()) {
         cout << "Antrian kosong.\n";
@@ -184,8 +199,6 @@ void menuAntrian() {
         cout << "\n=== MENU ANTRIAN ===\n";
         cout << "1. Tampilkan Semua Pesanan\n";
         cout << "2. Cari Pesanan\n";
-        cout << "3. Batalkan Pesanan\n";
-        cout << "4. Sortir Pesanan\n";
         cout << "0. Kembali\n";
         cout << "Pilih: ";
         cin >> pilih;
@@ -193,8 +206,6 @@ void menuAntrian() {
         switch (pilih) {
             case 1: tampilkanSemua(); break;
             case 2: cariPesanan(); break;
-            case 3: batalkanPesanan(); break;
-            case 4: sortirPesanan(); break;
             case 0: break;
             default: cout << "Pilihan tidak valid.\n";
         }
