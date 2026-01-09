@@ -4,15 +4,18 @@
 using namespace std;
 
 // ===== FUNCTION PROTOTYPE =====
+void tampilkanMenu();
+void tambahPesanan();
 void tampilkanSemua();
 void cariPesanan();
-void sortirPesanan();
-
+void batalkanPesanan();
+void sortirMenuByHarga();
+void menuAntrian();
 
 struct Pesanan {
     int id;
     string nama;
-    string menu;
+    vector<string> menu;
     string status;
     string jenis;   // Makan di Tempat / Bawa Pulang
 };
@@ -20,72 +23,140 @@ struct Pesanan {
 vector<Pesanan> antrian;
 int idCounter = 1;
 
+// ========== DATA BASE MENU =============
+struct MenuItem {
+    int id;
+    string nama;
+    string kategori; // Makanan / Minuman
+    int harga;
+};
+
+vector<MenuItem> databaseMenu = {
+    {1, "Nasi Goreng", "Makanan", 20000},
+    {2, "Mie Ayam", "Makanan", 18000},
+    {3, "Ayam Geprek", "Makanan", 22000},
+    {4, "Sate Ayam", "Makanan", 25000},
+    {5, "Bakso", "Makanan", 20000},
+    {6, "Es Teh", "Minuman", 5000},
+    {7, "Es Jeruk", "Minuman", 7000},
+    {8, "Kopi Hitam", "Minuman", 8000},
+    {9, "Teh Hangat", "Minuman", 5000},
+    {10, "Jus Alpukat", "Minuman", 12000}
+};
+
+// ============= output daftar menu ===========
+void tampilkanMenu() {
+    cout << "\n=== DAFTAR MENU ===\n";
+    cout << "ID | Nama Menu      | Kategori | Harga\n";
+    cout << "-------------------------------------\n";
+    for (auto m : databaseMenu) {
+        cout << m.id << "  | "
+             << m.nama << " | "
+             << m.kategori << " | Rp"
+             << m.harga << endl;
+    }
+}
+
+
+
 // ================= CREATE PESANAN =================
 void tambahPesanan() {
     Pesanan p;
-    char konfirmasi;
-    int pilihan, jenis;
+    int jenis;
 
     cout << "\n=== PEMBUATAN PESANAN ===\n";
     p.id = idCounter++;
 
     cout << "Masukkan Nama Customer : ";
     cin >> p.nama;
-    cout << "Masukkan Nama Menu     : ";
-    cin >> p.menu;
 
-    cout << "\nJenis Pesanan:\n";
-    cout << "1. Makan di Tempat\n";
-    cout << "2. Bawa Pulang\n";
-    cout << "Pilih: ";
-    cin >> jenis;
+    // ================= LOOP INPUT & VALIDASI =================
+    bool selesai = false;
 
-    if (jenis == 1)
-        p.jenis = "Makan di Tempat";
-    else
-        p.jenis = "Bawa Pulang";
+    while (!selesai) {
 
-ulang_validasi:
-    // ===== VALIDASI =====
-    cout << "\nValidasi Pesanan (y/n)? ";
-    cin >> konfirmasi;
+        p.menu.clear();   // Hapus menu lama jika perbaikan
 
-    if (konfirmasi != 'y' && konfirmasi != 'Y') {
-        cout << "\nValidasi ditolak.\n";
-        cout << "1. Perbaiki Pesanan\n";
-        cout << "2. Batalkan Pesanan\n";
+        int jumlahMenu;
+        cout << "\nMasukkan jumlah menu yang dipesan (1 - 2): ";
+        cin >> jumlahMenu;
+
+        tampilkanMenu();
+
+        bool inputValid = true;
+
+        for (int i = 0; i < jumlahMenu; i++) {
+            int idMenu;
+            bool ditemukan = false;
+
+            cout << "Pilih ID Menu ke-" << (i + 1) << " : ";
+            cin >> idMenu;
+
+            for (auto m : databaseMenu) {
+                if (m.id == idMenu) {
+                    p.menu.push_back(m.nama);
+                    ditemukan = true;
+                    break;
+                }
+            }
+
+            if (!ditemukan) {
+                cout << "ID Menu tidak valid.\n";
+                inputValid = false;
+                break;
+            }
+        }
+
+        if (!inputValid) continue;
+
+        cout << "\nJenis Pesanan:\n";
+        cout << "1. Makan di Tempat\n";
+        cout << "2. Bawa Pulang\n";
         cout << "Pilih: ";
-        cin >> pilihan;
+        cin >> jenis;
 
-        if (pilihan == 1) {
-            cout << "Masukkan Menu Baru: ";
-            cin >> p.menu;
-            goto ulang_validasi;
+        p.jenis = (jenis == 1) ? "Makan di Tempat" : "Bawa Pulang";
+
+        // ================= VALIDASI =================
+        char konfirmasi;
+        cout << "\nValidasi Pesanan (y/n)? ";
+        cin >> konfirmasi;
+
+        if (konfirmasi == 'y' || konfirmasi == 'Y') {
+            selesai = true;   // keluar loop, lanjut proses
         } else {
-            cout << "Pesanan dibatalkan.\n";
-            return;
+            int pilihan;
+            cout << "\n1. Perbaiki Menu\n";
+            cout << "2. Batalkan Pesanan\n";
+            cout << "Pilih: ";
+            cin >> pilihan;
+
+            if (pilihan == 2) {
+                cout << "Pesanan dibatalkan.\n";
+                return;
+            }
+            // jika pilih 1 → loop ulang otomatis
         }
     }
 
-    cout << "Validasi... [BERHASIL]\n";
-
-    // ===== MASUK ANTRIAN =====
+    // ================= MASUK ANTRIAN =================
     p.status = "Sedang Diproses";
     antrian.push_back(p);
     cout << "Pesanan masuk antrian (" << p.jenis << ").\n";
 
-    // ===== PEMBAYARAN =====
+    // ================= PEMBAYARAN =================
+    char bayar;
     cout << "\nPesanan siap. Lanjut ke pembayaran (y/n)? ";
-    cin >> konfirmasi;
+    cin >> bayar;
 
-    if (konfirmasi != 'y' && konfirmasi != 'Y') {
+    if (bayar != 'y' && bayar != 'Y') {
         cout << "Pembayaran ditunda.\n";
         return;
     }
 
     cout << "Pembayaran... [LUNAS]\n";
 
-    // ===== UPDATE STATUS =====
+    // ================= UPDATE STATUS =================
     for (auto &ps : antrian) {
         if (ps.id == p.id) {
             ps.status = "Selesai";
@@ -96,7 +167,7 @@ ulang_validasi:
     cout << "Status pesanan: SELESAI\n";
 }
 
-// ================= READ (URUT BERDASARKAN ID) =================
+// ======== READ (URUT BERDASARKAN ID) ===========
 void tampilkanSemua() {
     cout << "\n=== DAFTAR PESANAN (URUT ID) ===\n";
     if (antrian.empty()) {
@@ -113,22 +184,19 @@ void tampilkanSemua() {
     });
 
     for (auto p : temp) {
-       cout << "ID: " << p.id
-             << " | Nama: " << p.nama
-             << " | Menu: " << p.menu
-             << " | Jenis: " << p.jenis
-             << " | Status: " << p.status << endl;
-        cout << "---------------------------\n";
+    cout << "ID: " << p.id
+         << " | Nama: " << p.nama
+         << " | Menu: ";
+
+    for (int i = 0; i < p.menu.size(); i++) {
+        cout << p.menu[i];
+        if (i < p.menu.size() - 1) cout << ", ";
     }
 
+    cout << " | Jenis: " << p.jenis
+         << " | Status: " << p.status << endl;
 
-// ===== KONFIRMASI SORTIR =====
-    char konfirmasi;
-    cout << "\nIngin melihat hasil sortir berdasarkan jenis pesanan (y/n)? ";
-    cin >> konfirmasi;
-
-    if (konfirmasi == 'y' || konfirmasi == 'Y') {
-        sortirPesanan();
+    cout << "---------------------------\n";
     }
 }
 
@@ -142,7 +210,12 @@ void cariPesanan() {
         if (p.id == id) {
             cout << "\nID     : " << p.id << endl;
             cout << "Nama   : " << p.nama << endl;
-            cout << "Menu   : " << p.menu << endl;
+            cout << "Menu   : ";
+            for (int i = 0; i < p.menu.size(); i++) {
+            cout << p.menu[i];
+             if (i < p.menu.size() - 1) cout << ", ";
+            }
+            cout << endl;
             cout << "Status : " << p.status << endl;
             return;
         }
@@ -167,28 +240,41 @@ void batalkanPesanan() {
 }
 
 // ================= SORT =================
-void sortirPesanan() {
-    if (antrian.empty()) {
-        cout << "Antrian kosong.\n";
+void sortirMenuByHarga() {
+    int minHarga, maxHarga;
+
+    cout << "\n=== SORTIR MENU BERDASARKAN HARGA ===\n";
+    cout << "Masukkan harga minimum : Rp";
+    cin >> minHarga;
+    cout << "Masukkan harga maksimum : Rp";
+    cin >> maxHarga;
+
+    vector<MenuItem> hasil;
+
+    for (auto m : databaseMenu) {
+        if (m.harga >= minHarga && m.harga <= maxHarga) {
+            hasil.push_back(m);
+        }
+    }
+
+    if (hasil.empty()) {
+        cout << "Tidak ada menu pada rentang harga tersebut.\n";
         return;
     }
 
-    // Salin data agar urutan asli tidak terganggu tampilan default
-    vector<Pesanan> temp = antrian;
-
-    // Sort berdasarkan jenis pesanan
-    sort(temp.begin(), temp.end(), [](Pesanan a, Pesanan b) {
-        return a.jenis < b.jenis;
+    sort(hasil.begin(), hasil.end(), [](MenuItem a, MenuItem b) {
+        return a.harga < b.harga;
     });
 
-    cout << "\n=== HASIL SORT PESANAN (BERDASARKAN JENIS) ===\n";
-    for (auto p : temp) {
-        cout << "ID: " << p.id
-             << " | Nama: " << p.nama
-             << " | Menu: " << p.menu
-             << " | Jenis: " << p.jenis
-             << " | Status: " << p.status << endl;
-        cout << "---------------------------\n";
+    cout << "\n=== HASIL SORTIR MENU ===\n";
+    cout << "ID | Nama Menu | Kategori | Harga\n";
+    cout << "---------------------------------\n";
+
+    for (auto m : hasil) {
+        cout << m.id << " | "
+             << m.nama << " | "
+             << m.kategori << " | Rp"
+             << m.harga << endl;
     }
 }
 
@@ -204,8 +290,8 @@ void menuAntrian() {
         cin >> pilih;
 
         switch (pilih) {
-            case 1: tampilkanSemua(); break;
-            case 2: cariPesanan(); break;
+            case 1: tampilkanSemua(); break; 
+            case 2: cariPesanan(); break;    
             case 0: break;
             default: cout << "Pilihan tidak valid.\n";
         }
@@ -216,15 +302,22 @@ void menuAntrian() {
 int main() {
     int menu;
     do {
+        // ===== TAMPILKAN DATABASE MENU DI AWAL =====
+        tampilkanMenu();
+
         cout << "\n=== MENU UTAMA ===\n";
         cout << "1. Tambah Pesanan\n";
         cout << "2. Lihat Antrian\n";
+        cout << "3. Sortir Menu Berdasarkan Harga\n";
+        cout << "0. Keluar\n";
+
         cout << "Pilih Menu: ";
         cin >> menu;
 
         switch (menu) {
             case 1: tambahPesanan(); break;
             case 2: menuAntrian(); break;
+            case 3: sortirMenuByHarga(); break;
             case 0: cout << "Program selesai.\n"; break;
             default: cout << "Pilihan tidak valid.\n";
         }
